@@ -17,10 +17,6 @@ import org.hibernate.annotations.GenericGenerator;
 @Table(name = "RESOURCE_CONTENT")
 public class ResourceContent {
 
-	// @GeneratedValue(strategy = GenerationType.SEQUENCE, generator =
-	// "CONTENT_SEQ")
-	// @SequenceGenerator(sequenceName = "content_seq", allocationSize = 1, name =
-	// "CONTENT_SEQ")
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private long id;
@@ -28,28 +24,6 @@ public class ResourceContent {
 	private String name;
 	private String description;
 	private String link;
-
-	@Transient
-	private byte[] img;
-
-	@Transient
-	private String imageLink = "http://icons.iconarchive.com/icons/icons8/windows-8/512/City-No-Camera-icon.png";
-
-	public void setImageLink(String imageLink) {
-		this.imageLink = imageLink;
-	}
-
-	public String getImageLink() {
-		return imageLink;
-	}
-
-	public byte[] getImg() {
-		return img;
-	}
-
-	public void setImg(byte[] img) {
-		this.img = img;
-	}
 
 	@Transient
 	private List<ResourceRole> roles;
