@@ -1,10 +1,14 @@
 package oracle.solution.app.controllers;
 
 import java.util.Collection;
+import java.util.List;
 
 import javax.websocket.server.PathParam;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -72,6 +76,20 @@ public class ToolsServiceController {
 		}
 	}
 
+	@RequestMapping(value = "/tools/type/image/{id}", method = RequestMethod.GET)
+	public ResponseEntity getImage(@PathVariable("id") String id) {
+
+		byte[] imageData = null;
+
+		for (ResourceType type : typeService.getAllTypes()) {
+			if ((type.getId() + "").equals(id)) {
+				imageData = type.getImg();
+			}
+		}
+
+		return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE, "image/jpg").body(imageData);
+	}
+
 	/**
 	 * Update contents
 	 * 
@@ -87,6 +105,7 @@ public class ToolsServiceController {
 
 	/**
 	 * Delete contents from by content id
+	 * 
 	 * @param id
 	 * @return
 	 */

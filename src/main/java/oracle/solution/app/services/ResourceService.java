@@ -3,9 +3,11 @@ package oracle.solution.app.services;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -83,7 +85,7 @@ public class ResourceService {
 	public RequestFilterWrapper getTypeAndRolesFilterList() {
 		RequestFilterWrapper wrap = new RequestFilterWrapper();
 
-		wrap.setRolesList(getAllRoles());
+		// wrap.setRolesList(getAllRoles());
 		wrap.setTypesList(getAllTypes());
 		return wrap;
 	}
@@ -132,7 +134,11 @@ public class ResourceService {
 		List<ResourceRole> roles = new ArrayList();
 
 		for (String id : ids) {
-			roles.add(getRolesById(id));
+			try {
+				roles.add(getRolesById(id));
+			} catch (NoSuchElementException e) {
+				System.out.println(id + " role id relavant data is not found");
+			}
 		}
 
 		return roles;
@@ -150,9 +156,9 @@ public class ResourceService {
 	public Collection<ResourceType> findMatchingCources(String catId, String roleId, String freetext) {
 
 		// If no Category id and role id is provided then return un-filterd list
-		if (catId.isEmpty() && roleId.isEmpty()) {
-			return getAllCourses();
-		}
+		// if (catId.isEmpty() && roleId.isEmpty()) {
+		// return getAllCourses();
+		// }
 
 		List catIdList = catId.length() > 0 ? Arrays.asList(catId.split(",")) : new ArrayList<>();
 		List roleIdList = roleId.length() > 0 ? Arrays.asList(roleId.split(",")) : new ArrayList<>();
@@ -160,7 +166,12 @@ public class ResourceService {
 		Collection<ResourceType> categoryList = getAllCourses();
 		Collection<ResourceType> tempList = new ArrayList<>();
 
+		if (!freetext.trim().isEmpty()) {
+			categoryList = filterContentBySearchedText(categoryList, freetext);
+		}
+
 		for (ResourceType type : categoryList) {
+
 			if (!catId.isEmpty()) {
 				// Check for category id match
 				if (catIdList.contains(type.getId() + "")) {
@@ -168,20 +179,28 @@ public class ResourceService {
 					// Filter the contents based on associated roles and matching searched text
 					// in the content name and description
 					if (roleIdList.size() > 0) {
-						type = findMatchingContentsByRoles(type, roleIdList, freetext.toLowerCase());
-						tempList.add(type);
+						type = findMatchingContentsByRoles(type, roleIdList);
+						if (!type.getContents().isEmpty()) {
+							tempList.add(type);
+						}
 					} else {
-						tempList.add(type);
+						if (!type.getContents().isEmpty()) {
+							tempList.add(type);
+						}
 					}
 				}
 			} else {
 				// Filter the contents based on associated roles and matching searched text
 				// in the content name and description
 				if (roleIdList.size() > 0) {
-					type = findMatchingContentsByRoles(type, roleIdList, freetext.toLowerCase());
-					tempList.add(type);
+					type = findMatchingContentsByRoles(type, roleIdList);
+					if (!type.getContents().isEmpty()) {
+						tempList.add(type);
+					}
 				} else {
-					tempList.add(type);
+					if (!type.getContents().isEmpty()) {
+						tempList.add(type);
+					}
 				}
 			}
 		}
@@ -189,7 +208,30 @@ public class ResourceService {
 		return tempList;
 	}
 
-	public ResourceType findMatchingContentsByRoles(ResourceType type, List roleIdList, String freetext) {
+	private Collection<ResourceType> filterContentBySearchedText(Collection<ResourceType> categoryList,
+			String freetext) {
+
+		Collection<ResourceType> tempTypeList = new ArrayList<>();
+
+		for (ResourceType resourceType : categoryList) {
+			List<ResourceContent> tempContentlist = new ArrayList<>();
+			for (ResourceContent resourceContent : resourceType.getContents()) {
+				if (resourceContent.getName().toLowerCase().contains(freetext)
+						|| resourceContent.getDescription().toLowerCase().contains(freetext)) {
+					tempContentlist.add(resourceContent);
+				}
+			}
+
+			if (!tempContentlist.isEmpty()) {
+				resourceType.setContents(tempContentlist);
+				tempTypeList.add(resourceType);
+			}
+		}
+
+		return tempTypeList;
+	}
+
+	public ResourceType findMatchingContentsByRoles(ResourceType type, List roleIdList) {
 		List<ResourceContent> contents = type.getContents();
 		List<ResourceContent> tempContents = new ArrayList<>();
 
@@ -198,15 +240,8 @@ public class ResourceService {
 			// Filter contents by associated roles
 			// Then filter by matching search text
 			if (isRoleMatching(roleIdList, content.getMappedRolesIds().split(","))) {
-				if (freetext.length() > 0) {
-					if (content.getName().toLowerCase().contains(freetext)
-							|| content.getDescription().toLowerCase().contains(freetext)) {
-						tempContents.add(content);
-					}
-				} else {
-					tempContents.add(content);
-				}
 
+				tempContents.add(content);
 			}
 		}
 

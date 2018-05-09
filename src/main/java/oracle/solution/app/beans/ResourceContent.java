@@ -30,6 +30,28 @@ public class ResourceContent {
 	private String link;
 
 	@Transient
+	private byte[] img;
+
+	@Transient
+	private String imageLink = "http://icons.iconarchive.com/icons/icons8/windows-8/512/City-No-Camera-icon.png";
+
+	public void setImageLink(String imageLink) {
+		this.imageLink = imageLink;
+	}
+
+	public String getImageLink() {
+		return imageLink;
+	}
+
+	public byte[] getImg() {
+		return img;
+	}
+
+	public void setImg(byte[] img) {
+		this.img = img;
+	}
+
+	@Transient
 	private List<ResourceRole> roles;
 
 	@Column(name = "MAPPED_CATEGORY_IDS")
@@ -49,7 +71,7 @@ public class ResourceContent {
 	public long getId() {
 		return id;
 	}
-	
+
 	public void setId(long id) {
 		this.id = id;
 	}
